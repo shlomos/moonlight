@@ -668,12 +668,12 @@ public class ApplicationAggregator implements IApplicationAggregator {
 
 	private static ApplicationAggregator _instance;
 	
-	private List<BoxApplication> apps;
+	private IApplicationRegistry registry;
 	private Map<ILocationSpecifier, IProcessingGraph> aggregated;
 	private Map<ILocationSpecifier, Map<String, Origin>> origins;
 	
 	private ApplicationAggregator() {
-		this.apps = new ArrayList<>();
+		this.registry = null;
 		this.aggregated = new HashMap<>();
 		this.origins = new HashMap<>();
 	}
@@ -690,64 +690,64 @@ public class ApplicationAggregator implements IApplicationAggregator {
 	}
 	
 	@Override
-	public void addApplications(List<BoxApplication> apps) {
-		this.apps.addAll(apps);
-	}
-
-	@Override
-	public void addApplication(BoxApplication app) {
-		this.apps.add(app);
+	public void setApplicationRegistry(IApplicationRegistry reg) {
+		this.registry = reg;
 	}
 	
 	@Override
 	public void performAggregation() {
+		for (InstanceLocationSpecifier loc : topology.getAllEndpoints()) {
+			aggregateLocation(loc);
+		}
+	}
+
+	@Override
+	public void aggregateLocation(InstanceLocationSpecifier loc) {
 		synchronized (this) {
+			// Make sure we removed previous aggregated graph. 
+			this.aggregated.remove(loc);
 			// TODO: The following should be done for each OBI location specifier
 			ITopologyManager topology = TopologyManager.getInstance(); 
-			for (BoxApplication app : this.apps) {
-				
-				Map<InstanceLocationSpecifier, IProcessingGraph> flattened = flattenStatements(app);
-				
-				// Remembers the source app of each alert block
-				// (TODO: When we support merged alerts, we should change here)
-				for (Entry<InstanceLocationSpecifier, IProcessingGraph> entry : flattened.entrySet()) {
-					Map<String, Origin> origins = new HashMap<>();
-					entry.getValue().getBlocks()
-							.stream()
-							.filter(b -> b.getBlockType().equals("Alert"))
-							.forEach(b -> origins.put(b.getId(), new Origin(app, b, b.getId())));
-					this.origins.put(entry.getKey(), origins);
+			for (IApplicationType app_type : registry.getAppTypes()) {
+				BoxApplication variant = registry.getRandomApplicationByType(app_type);
+				Map<InstanceLocationSpecifier, IProcessingGraph> flattened = flattenStatements(variant);
+				IProcessingGraph merged = flattened.get(loc);
+				IProcessingGraph prev = this.aggregated.get(loc);
+				if (merged == null){
+					continue;
 				}
-				
-				for (InstanceLocationSpecifier loc : topology.getAllEndpoints()) {
-					IProcessingGraph merged = flattened.get(loc);
-					IProcessingGraph prev = this.aggregated.get(loc);
-					if (merged == null){
-						continue;
-					}
-					if (prev != null){
-						merged = merge(prev, merged);
-					}
-					
-					this.aggregated.put(loc, merged);
+				if (prev != null){
+					merged = merge(prev, merged);
 				}
+				this.aggregated.put(loc, merged);
 			}
 		}
 	}
 
 	@Override
 	public IProcessingGraph getProcessingGraph(ILocationSpecifier loc) {
-		return this.aggregated.get(loc);
+		IProcessingGraph graph = this.aggregated.get(loc);
+		if (graph == null) {
+			performAggregation(loc);
+			graph = this.aggregated.get(loc);
+		}
+		return graph;
+	}
+
+	@Override
+	public void invalidateProcessingGraph(ILocationSpecifier loc) {
+		this.aggregated.remove(loc);
 	}
 	
-	private Map<InstanceLocationSpecifier, IProcessingGraph> flattenStatements(BoxApplication app){
+	private Map<InstanceLocationSpecifier, IProcessingGraph> flattenStatements(IVariant variant){
 		ITopologyManager topology = TopologyManager.getInstance(); 
 
 		// This part is to flatten the app statements to have all statements only on leaf nodes 
 		HashMap<InstanceLocationSpecifier, IProcessingGraph> flattened = new HashMap<>();
+
 		Map<ILocationSpecifier, IStatement> statements 
-			= Maps.uniqueIndex(app.getStatements(), stmt -> stmt.getLocation());
-		
+			= Maps.uniqueIndex(variant.getStatements(), stmt -> stmt.getLocation());
+
 		// TODO: need to implement BFS on topology
 		for (ILocationSpecifier loc : topology.bfs()){
 			IStatement relevant = statements.get(loc);

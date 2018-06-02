@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.ServiceLoader;
 
 import org.moonlightcontroller.bal.BoxApplication;
@@ -20,48 +21,53 @@ import org.moonlightcontroller.bal.BoxApplication;
  */
 public class ApplicationRegistry implements IApplicationRegistry {
 
-	private Map<String, BoxApplication> apps;
+	private Map<String, BoxApplication> apps, apps_by_name;
+	private Map<IApplicationType, List<BoxApplication>> apps_by_type;
 	
 	public ApplicationRegistry(){
-		this.apps = new HashMap<>();
+		this.apps_by_name= new HashMap<>();
+		this.apps_by_type = new HashMap<>();
+		this.apps = apps_by_name;
 	}
 	@Override
 	public void addApplication(BoxApplication app) {
-		this.apps.put(app.getName(), app);
+		this.apps_by_name.put(app.getName(), app);
+		this.apps_by_type.put(app.getType(), app);
 	}
 	@Override
 	public boolean loadFromPath(String path) throws IOException{
-        File loc = new File(path);
+		File loc = new File(path);
 
-        if (!loc.exists()) {
-        	System.out.println("Given path is not found:" + path);
-        	return false;
-        }
-        if (!loc.isDirectory()){
-        	System.out.println("Path is not a directory:" + path);
-        	return false;
-        }
-        
-        File[] flist = loc.listFiles(new FileFilter() {
-            public boolean accept(File file) {
-            	return file.getPath().toLowerCase().endsWith(".jar");
-            	}
-        });
-        
-        
-        URL[] urls = new URL[flist.length];
-        for (int i = 0; i < flist.length; i++){
-            urls[i] = flist[i].toURI().toURL();
-        }
-        URLClassLoader ucl = new URLClassLoader(urls);
+		if (!loc.exists()) {
+			System.out.println("Given path is not found:" + path);
+			return false;
+		}
+		if (!loc.isDirectory()){
+			System.out.println("Path is not a directory:" + path);
+			return false;
+		}
+		
+		File[] flist = loc.listFiles(new FileFilter() {
+		public boolean accept(File file) {
+			return file.getPath().toLowerCase().endsWith(".jar");
+			}
+		});
+		
+		
+		URL[] urls = new URL[flist.length];
+		for (int i = 0; i < flist.length; i++){
+			urls[i] = flist[i].toURI().toURL();
+		}
+		URLClassLoader ucl = new URLClassLoader(urls);
 
-        ServiceLoader<BoxApplication> sl = ServiceLoader.load(BoxApplication.class, ucl);
-        Iterator<BoxApplication> apit = sl.iterator();
-        while (apit.hasNext()){
-            BoxApplication app = apit.next();
-            System.out.printf("Registry: Found application: %s %n", app.getName());
-            this.apps.put(app.getName(), app);
-        }
+		//System.out.println(BoxApplication.class);
+		ServiceLoader<BoxApplication> sl = ServiceLoader.load(BoxApplication.class, ucl);
+		Iterator<BoxApplication> apit = sl.iterator();
+		while (apit.hasNext()){
+			BoxApplication app = apit.next();
+			System.out.printf("Registry: Found application: %s of type %d %n", app.getName(), app.getType());
+			this.addApplication(app);
+		}
 		return true;
 	}
 	
@@ -73,5 +79,30 @@ public class ApplicationRegistry implements IApplicationRegistry {
 	@Override
 	public BoxApplication getApplicationByName(String name) {
 		return this.apps.get(name);
+	}
+
+	@Override
+	public List<BoxApplication> getApplicationVariants(IApplicationType type) {
+		return this.apps_by_type.get(type);
+	}
+
+	@Override
+	public List<BoxApplication> getApplicationTypes() {
+		return this.apps_by_type.keySet();
+	}
+
+	@Override
+	public List<BoxApplication> getRandomApplicationByType(IApplicationType type) {
+		List <BoxApplication> apps = this.apps_by_type.get(type);
+		Random rand = new Random();
+		if (apps.size() == 1) {
+			return apps.get(0);
+		} else if (apps.size() > 1) {
+			do {
+				BoxApplication app = apps.get(rand.nextInt(apps.size()));
+			} while (app.getVariant().variant == exceptVariant);  // fix me: might take several iterations with repetitions
+			return app;
+		}
+		return null;
 	}
 }

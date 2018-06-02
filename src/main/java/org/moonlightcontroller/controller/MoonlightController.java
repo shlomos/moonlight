@@ -44,7 +44,7 @@ public class MoonlightController {
 		List<BoxApplication> apps = this.registry.getApplications();
 		
 		IApplicationAggregator aggregator = ApplicationAggregator.getInstance();
-		aggregator.addApplications(apps);
+		aggregator.setRegistry(this.registry);
 		aggregator.performAggregation();
 		
 		IEventManager eManager = EventManager.getInstance();

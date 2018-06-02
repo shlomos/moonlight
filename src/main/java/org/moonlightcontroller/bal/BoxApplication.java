@@ -22,6 +22,7 @@ import org.openboxprotocol.protocol.Priority;
 public abstract class BoxApplication {
 	
 	protected String name;
+	protected IApplicationType type;
 	
 	private Priority priority;
 	private Map<ILocationSpecifier, IStatement> statements;
@@ -43,14 +44,21 @@ public abstract class BoxApplication {
 	 * @return the name of the application
 	 */
 	public String getName() {
-		return name;
+		return this.name;
+	}
+
+	/**
+	 * @return the type of the application
+	 */
+	public String getType() {
+		return this.type;
 	}
 	
 	/**
 	 * @return the priority of the application
 	 */
 	public Priority getPriority() {
-		return priority;
+		return this.priority;
 	}
 			
 	/**

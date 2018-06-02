@@ -27,6 +27,6 @@ public class Main {
 		ITopologyManager topology = TopologyManager.getInstance();
 		MoonlightController mc = new MoonlightController(reg, topology, server_port);
 		mc.start();
-		return;
+	return;
 	}
 }

@@ -35,4 +35,11 @@ public interface IApplicationRegistry {
 	 * @return
 	 */
 	BoxApplication getApplicationByName(String name);
+
+	/**
+	 * Gets an application variant by type.
+	 * @param name
+	 * @return
+	 */
+	BoxApplication getApplicationVariants(long type);
 }
