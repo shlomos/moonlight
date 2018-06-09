@@ -2,8 +2,10 @@ package org.moonlightcontroller.registry;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 import org.moonlightcontroller.bal.BoxApplication;
+import org.moonlightcontroller.mtd.IApplicationType;
 
 /**
  * The registry interface is responsible for registering applications in the OBC
@@ -38,8 +40,14 @@ public interface IApplicationRegistry {
 
 	/**
 	 * Gets an application variant by type.
-	 * @param name
-	 * @return
+	 * @param type
+	 * @return List of applications for the given type
 	 */
-	BoxApplication getApplicationVariants(long type);
+	List<BoxApplication> getApplicationVariants(IApplicationType type);
+
+	/**
+	 * Gets all application types registered.
+	 * @return All registered application types
+	 */
+	public Set<IApplicationType> getApplicationTypes();
 }

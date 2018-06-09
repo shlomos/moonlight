@@ -10,9 +10,12 @@ import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Random;
 
 import org.moonlightcontroller.aggregator.Tupple.Pair;
 import org.moonlightcontroller.bal.BoxApplication;
+import org.moonlightcontroller.mtd.IApplicationType;
+import org.moonlightcontroller.registry.IApplicationRegistry;
 import org.moonlightcontroller.blocks.Alert;
 import org.moonlightcontroller.blocks.Discard;
 import org.moonlightcontroller.blocks.FromDevice;
@@ -696,30 +699,65 @@ public class ApplicationAggregator implements IApplicationAggregator {
 	
 	@Override
 	public void performAggregation() {
+		ITopologyManager topology = TopologyManager.getInstance(); 
 		for (InstanceLocationSpecifier loc : topology.getAllEndpoints()) {
 			aggregateLocation(loc);
 		}
 	}
 
+	private IProcessingGraph findGraphForLocation(BoxApplication app, ILocationSpecifier loc) {
+		ITopologyManager topology = TopologyManager.getInstance();
+		Collection<IStatement> statements = app.getStatements();
+		for(IStatement stmt: statements) {
+			ILocationSpecifier stmtLoc = stmt.getLocation();
+			for (InstanceLocationSpecifier i: topology.getSubInstances(stmtLoc)) {
+				if (i.equals(loc)) {
+					return stmt.getProcessingGraph();
+				}
+			}
+		}
+		return null;
+	}
+
 	@Override
-	public void aggregateLocation(InstanceLocationSpecifier loc) {
+	public void aggregateLocation(ILocationSpecifier loc) {
 		synchronized (this) {
 			// Make sure we removed previous aggregated graph. 
 			this.aggregated.remove(loc);
 			// TODO: The following should be done for each OBI location specifier
-			ITopologyManager topology = TopologyManager.getInstance(); 
-			for (IApplicationType app_type : registry.getAppTypes()) {
-				BoxApplication variant = registry.getRandomApplicationByType(app_type);
-				Map<InstanceLocationSpecifier, IProcessingGraph> flattened = flattenStatements(variant);
-				IProcessingGraph merged = flattened.get(loc);
+			for (IApplicationType app_type : registry.getApplicationTypes()) {
+				List<BoxApplication> variants = registry.getApplicationVariants(app_type);
+				HashMap<String, IProcessingGraph> plausibleVariants = new HashMap<>();
+				BoxApplication variant;
+				IProcessingGraph graph;
+				Random rand = new Random();
+
+				for (BoxApplication app: variants) {
+					graph = findGraphForLocation(app, loc);
+					if (graph != null) {
+						plausibleVariants.put(app.getName(), graph);
+					}
+				}
+
+				Object[] keys = plausibleVariants.keySet().toArray();
+				if (keys.length == 0) {
+					return;
+				} else if (keys.length == 1) {
+					graph = plausibleVariants.get(keys[0]);
+				} else {
+					// TODO: get next pick if the same variant is chosen as the current.
+					int pick = rand.nextInt(keys.length);
+					graph = plausibleVariants.get(keys[pick]);
+				}
+
 				IProcessingGraph prev = this.aggregated.get(loc);
-				if (merged == null){
+				if (graph == null){
 					continue;
 				}
 				if (prev != null){
-					merged = merge(prev, merged);
+					graph = merge(prev, graph);
 				}
-				this.aggregated.put(loc, merged);
+				this.aggregated.put(loc, graph);
 			}
 		}
 	}
@@ -728,7 +766,7 @@ public class ApplicationAggregator implements IApplicationAggregator {
 	public IProcessingGraph getProcessingGraph(ILocationSpecifier loc) {
 		IProcessingGraph graph = this.aggregated.get(loc);
 		if (graph == null) {
-			performAggregation(loc);
+			aggregateLocation(loc);
 			graph = this.aggregated.get(loc);
 		}
 		return graph;
@@ -737,29 +775,6 @@ public class ApplicationAggregator implements IApplicationAggregator {
 	@Override
 	public void invalidateProcessingGraph(ILocationSpecifier loc) {
 		this.aggregated.remove(loc);
-	}
-	
-	private Map<InstanceLocationSpecifier, IProcessingGraph> flattenStatements(IVariant variant){
-		ITopologyManager topology = TopologyManager.getInstance(); 
-
-		// This part is to flatten the app statements to have all statements only on leaf nodes 
-		HashMap<InstanceLocationSpecifier, IProcessingGraph> flattened = new HashMap<>();
-
-		Map<ILocationSpecifier, IStatement> statements 
-			= Maps.uniqueIndex(variant.getStatements(), stmt -> stmt.getLocation());
-
-		// TODO: need to implement BFS on topology
-		for (ILocationSpecifier loc : topology.bfs()){
-			IStatement relevant = statements.get(loc);
-			if (relevant != null) {
-				for (InstanceLocationSpecifier i : topology.getSubInstances(loc)){
-					IProcessingGraph g = relevant.getProcessingGraph(); 
-					flattened.put(i, g);
-				}
-			}
-		}
-		
-		return flattened;
 	}
 	
 	@Override

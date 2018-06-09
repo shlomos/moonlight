@@ -22,12 +22,5 @@ public interface IApplicationType {
 	 * @param m the type to find
 	 * @return true if this.getType() == m
 	 */
-	boolean isMatch(long m);
-	
-	/**
-	 * Finds the child of this ILocationSpecifier which has id equals to m
-	 * @param m
-	 * @return
-	 */
-	IApplicationType getVariant(long m);
+	boolean isMatch(long t);
 }

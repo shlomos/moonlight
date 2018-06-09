@@ -9,11 +9,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
 import java.util.Random;
 import java.util.ServiceLoader;
 
 import org.moonlightcontroller.bal.BoxApplication;
+import org.moonlightcontroller.mtd.IApplicationType;
 
 /**
  * Application registry is responsible for loading applications into the OBC
@@ -32,7 +34,8 @@ public class ApplicationRegistry implements IApplicationRegistry {
 	@Override
 	public void addApplication(BoxApplication app) {
 		this.apps_by_name.put(app.getName(), app);
-		this.apps_by_type.put(app.getType(), app);
+		this.apps_by_type.putIfAbsent(app.getType(), new ArrayList<BoxApplication>());
+		this.apps_by_type.get(app.getType()).add(app);
 	}
 	@Override
 	public boolean loadFromPath(String path) throws IOException{
@@ -87,22 +90,7 @@ public class ApplicationRegistry implements IApplicationRegistry {
 	}
 
 	@Override
-	public List<BoxApplication> getApplicationTypes() {
+	public Set<IApplicationType> getApplicationTypes() {
 		return this.apps_by_type.keySet();
-	}
-
-	@Override
-	public List<BoxApplication> getRandomApplicationByType(IApplicationType type) {
-		List <BoxApplication> apps = this.apps_by_type.get(type);
-		Random rand = new Random();
-		if (apps.size() == 1) {
-			return apps.get(0);
-		} else if (apps.size() > 1) {
-			do {
-				BoxApplication app = apps.get(rand.nextInt(apps.size()));
-			} while (app.getVariant().variant == exceptVariant);  // fix me: might take several iterations with repetitions
-			return app;
-		}
-		return null;
 	}
 }

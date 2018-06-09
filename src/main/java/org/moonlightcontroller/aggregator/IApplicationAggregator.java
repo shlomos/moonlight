@@ -2,7 +2,7 @@ package org.moonlightcontroller.aggregator;
 
 import java.util.List;
 
-import org.moonlightcontroller.bal.BoxApplication;
+import org.moonlightcontroller.registry.IApplicationRegistry;
 import org.moonlightcontroller.managers.models.messages.Alert;
 import org.moonlightcontroller.processing.IProcessingGraph;
 import org.moonlightcontroller.topology.ILocationSpecifier;
@@ -21,7 +21,7 @@ public interface IApplicationAggregator {
 	/**
 	 * Performs aggregation for a location
 	 */
-	public void aggregateLocation(InstanceLocationSpecifier loc);
+	public void aggregateLocation(ILocationSpecifier loc);
 
 	/**
 	 * Invalidate the graph for given location, forcing it to be reaggregated with new variants. 

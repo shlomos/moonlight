@@ -7,7 +7,8 @@ public class ApplicationType implements IApplicationType {
 	/**
 	 * @return the id of the location
 	 */
-	long getType() {
+	@Override
+	public long getType() {
 		return this.type;
 	}
 	
@@ -16,6 +17,8 @@ public class ApplicationType implements IApplicationType {
 	 * @param m the type to find
 	 * @return true if this.getType() == m
 	 */
-	boolean isMatch(long m) {
-		return this.getType() == m;
+	@Override
+	public boolean isMatch(long t) {
+		return this.getType() == t;
 	}
+}

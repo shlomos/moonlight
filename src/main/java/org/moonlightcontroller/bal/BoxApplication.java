@@ -11,6 +11,7 @@ import org.moonlightcontroller.events.IInstanceUpListener;
 import org.moonlightcontroller.processing.IProcessingGraph;
 import org.moonlightcontroller.topology.IApplicationTopology;
 import org.moonlightcontroller.topology.ILocationSpecifier;
+import org.moonlightcontroller.mtd.IApplicationType;
 import org.openboxprotocol.protocol.IStatement;
 import org.openboxprotocol.protocol.Priority;
 
@@ -50,7 +51,7 @@ public abstract class BoxApplication {
 	/**
 	 * @return the type of the application
 	 */
-	public String getType() {
+	public IApplicationType getType() {
 		return this.type;
 	}
 	

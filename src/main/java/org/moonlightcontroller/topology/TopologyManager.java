@@ -41,7 +41,6 @@ public class TopologyManager implements ITopologyManager {
 		Gson gb = new GsonBuilder().create();
 		String string = readFile();
 		segment = gb.fromJson(string, Segment.class);
-		System.out.println(segment.toString());
 	}
 
 	private String readFile() {
