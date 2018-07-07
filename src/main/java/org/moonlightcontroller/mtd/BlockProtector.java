@@ -43,7 +43,7 @@ public class BlockProtector {
 			new Connector.Builder().setSourceBlock(entry_stamp).setSourceOutputPort(0).setDestBlock(block).build()
 		));
 		for (int i = 0; i < num_outputs; i++) {
-			connectors.add(new Connector.Builder().setSourceBlock(block).setSourceOutputPort(i).setDestBlock(guard).build());
+			connectors.add(new Connector.Builder().setSourceBlock(block).setSourceOutputPort(i).setDestBlock(guard).setDestInputPort(i).build());
 		}
 		return new ProcessingGraph.Builder().setBlocks(blocks).setConnectors(connectors).setRoot(entry_stamp).build();
 	}

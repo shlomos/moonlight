@@ -169,7 +169,7 @@ public class ConnectionManager implements ISouthboundClient {
 		return new JsonConnector(connector.getSourceBlockId(), 
 				connector.getSourceOutputPort(), 
 				connector.getDestinatinBlockId(),
-				0);
+				connector.getDestInputPort());
 	}
 
 
