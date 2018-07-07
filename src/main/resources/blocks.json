@@ -1110,6 +1110,65 @@
           "description": ""
         }
       ]
+    },
+    {
+      "type": "SetTimestamp",
+      "blockClass": "St",
+      "configuration": [
+      ],
+      "read_handlers": [
+        
+      ],
+      "write_handlers": [
+        
+      ]
+    },
+    {
+      "type": "UtilizationMonitor",
+      "blockClass": "St",
+      "configuration": [
+        {
+          "name": "window",
+          "required": true,
+          "type": "int",
+          "description": ""
+        },
+        {
+          "name": "proc_threshold",
+          "required": true,
+          "type": "number",
+          "description": ""
+        }
+      ],
+      "read_handlers": [
+        {
+          "name": "count", 
+          "type": "int", 
+          "description": ""
+        }, 
+        {
+          "name": "time", 
+          "type": "number", 
+          "description": ""
+        }, 
+        {
+          "name": "average_time", 
+          "type": "number", 
+          "description": ""
+        }, 
+        {
+          "name": "average_window_time", 
+          "type": "number", 
+          "description": ""
+        }
+      ], 
+      "write_handlers": [ 
+        {
+          "name": "reset", 
+          "type": "null", 
+          "description": ""
+        }
+      ]
     }
   ]
 }

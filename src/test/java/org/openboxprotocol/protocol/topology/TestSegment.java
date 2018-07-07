@@ -15,7 +15,7 @@ public class TestSegment {
 //		Segment subSegment = new Segment("seg2");
 //		subSegment.endpoints.add(new InstanceLocationSpecifier());
 //		subSegment.endpoints.add(new InstanceLocationSpecifier());
-		
+
 		
 //		segment.segments.add(subSegment);
 		

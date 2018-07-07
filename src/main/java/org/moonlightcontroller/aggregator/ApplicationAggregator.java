@@ -727,15 +727,16 @@ public class ApplicationAggregator implements IApplicationAggregator {
 			// TODO: The following should be done for each OBI location specifier
 			for (IApplicationType app_type : registry.getApplicationTypes()) {
 				List<BoxApplication> variants = registry.getApplicationVariants(app_type);
-				HashMap<String, IProcessingGraph> plausibleVariants = new HashMap<>();
+				HashMap<BoxApplication, IProcessingGraph> plausibleVariants = new HashMap<>();
+				Map<String, Origin> origins = new HashMap<>();
+				Random rand = new Random();
 				BoxApplication variant;
 				IProcessingGraph graph;
-				Random rand = new Random();
 
 				for (BoxApplication app: variants) {
 					graph = findGraphForLocation(app, loc);
 					if (graph != null) {
-						plausibleVariants.put(app.getName(), graph);
+						plausibleVariants.put(app, graph);
 					}
 				}
 
@@ -743,12 +744,19 @@ public class ApplicationAggregator implements IApplicationAggregator {
 				if (keys.length == 0) {
 					return;
 				} else if (keys.length == 1) {
-					graph = plausibleVariants.get(keys[0]);
+					variant = (BoxApplication)keys[0];
+					graph = plausibleVariants.get(variant);
 				} else {
 					// TODO: get next pick if the same variant is chosen as the current.
 					int pick = rand.nextInt(keys.length);
-					graph = plausibleVariants.get(keys[pick]);
+					variant = (BoxApplication)keys[pick];
+					graph = plausibleVariants.get(variant);
 				}
+				graph.getBlocks()
+						.stream()
+						.filter(b -> b.getBlockType().equals("Alert"))
+						.forEach(b -> origins.put(b.getId(), new Origin(variant, b, b.getId())));
+				this.origins.put(loc, origins);
 
 				IProcessingGraph prev = this.aggregated.get(loc);
 				if (graph == null){
