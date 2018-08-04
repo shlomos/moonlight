@@ -2,6 +2,7 @@ package org.moonlightcontroller.mtd;
 
 import org.moonlightcontroller.aggregator.ApplicationAggregator;
 import org.moonlightcontroller.aggregator.IApplicationAggregator;
+import org.moonlightcontroller.managers.ConnectionManager;
 import org.moonlightcontroller.topology.InstanceLocationSpecifier;
  
 import java.util.TimerTask;
@@ -16,11 +17,13 @@ public class ProactiveCasteling extends TimerTask {
 
     Date now;
     IApplicationAggregator aggregator;
+    ConnectionManager connMgr;
     Timer time;
     
     public ProactiveCasteling() {
         super();
         this.aggregator = ApplicationAggregator.getInstance();
+        this.connMgr = ConnectionManager.getInstance();
         this.time = new Timer();
     }
 
@@ -31,9 +34,11 @@ public class ProactiveCasteling extends TimerTask {
 	public void run() {
 		now = new Date();
         System.out.println("[" + now + "] " + "Proactively casteling applications...");
-        InstanceLocationSpecifier randomLocation = new InstanceLocationSpecifier(22);
+        long pi = 196234419327250L;
+        InstanceLocationSpecifier randomLocation = new InstanceLocationSpecifier(pi);
         this.aggregator.invalidateProcessingGraph(randomLocation);
         this.aggregator.aggregateLocation(randomLocation);
         System.out.println("sending re-aggregated graph");
+        connMgr.sendSetProcessingGraphRequest(randomLocation);
 	}
 }

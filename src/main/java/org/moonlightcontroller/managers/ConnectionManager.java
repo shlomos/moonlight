@@ -101,22 +101,9 @@ public class ConnectionManager implements ISouthboundClient {
 				.isAfter(LocalDateTime.now().minusSeconds(data.getKeepAliveInterval()));
 	}
 
-	public Response handleHelloRequest(String ip, Hello message) {
-		int xid = message.getXid();
-		messagesMapping.put(xid, message);
+	public Response sendSetProcessingGraphRequest(InstanceLocationSpecifier loc) {
 		try {
-			long dpid = message.getDpid();
-			InstanceLocationSpecifier key = getInstanceLocationSpecifier(dpid);
-
-			ConnectionInstance value = (new ConnectionInstance.Builder())
-					.setIp(ip)
-					.setDpid(dpid)
-					.setVersion(message.getVersion())
-					.setCapabilities(message.getCapabilities())
-					.build();
-			instancesMapping.put(key, value);
-
-			IProcessingGraph processingGraph = ApplicationAggregator.getInstance().getProcessingGraph(key);
+			IProcessingGraph processingGraph = ApplicationAggregator.getInstance().getProcessingGraph(loc);
 			List<JsonBlock> blocks = new ArrayList<>();
 			List<JsonConnector> connectors = new ArrayList<>();
 			if (processingGraph != null){
@@ -124,14 +111,13 @@ public class ConnectionManager implements ISouthboundClient {
 						.filter(b -> b instanceof CustomBlock)
 						.collect(Collectors.toList());
 				if (custom.size() > 0){
-					this.sendCustomBlocks(custom, key, message.getObiType());
+					this.sendCustomBlocks(custom, loc, ObiType.ClickObi);
 				}
 				blocks = translateBlocks(processingGraph.getBlocks());
 				connectors = translateConnectors(processingGraph.getConnectors());
 			}
-			
-			SetProcessingGraphRequest processMessage = new SetProcessingGraphRequest(0, dpid, null, blocks, connectors);
-			sendMessage(key, processMessage, new NullRequestSender());
+			SetProcessingGraphRequest processMessage = new SetProcessingGraphRequest(0, instancesMapping.get(loc).getDpid(), null, blocks, connectors);
+			sendMessage(loc, processMessage, new NullRequestSender());
 			
 			return okResponse();
 
@@ -140,6 +126,22 @@ public class ConnectionManager implements ISouthboundClient {
 			e.printStackTrace();
 			return internalErrorResponse();
 		}
+	}
+
+	public Response handleHelloRequest(String ip, Hello message) {
+		int xid = message.getXid();
+		messagesMapping.put(xid, message);
+		long dpid = message.getDpid();
+		InstanceLocationSpecifier key = getInstanceLocationSpecifier(dpid);
+
+		ConnectionInstance value = (new ConnectionInstance.Builder())
+				.setIp(ip)
+				.setDpid(dpid)
+				.setVersion(message.getVersion())
+				.setCapabilities(message.getCapabilities())
+				.build();
+		instancesMapping.put(key, value);
+		return sendSetProcessingGraphRequest(key);
 	}
 
 	private void sendCustomBlocks(
