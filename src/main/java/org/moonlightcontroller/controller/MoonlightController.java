@@ -5,6 +5,7 @@ import java.util.List;
 import org.moonlightcontroller.aggregator.ApplicationAggregator;
 import org.moonlightcontroller.aggregator.IApplicationAggregator;
 import org.moonlightcontroller.bal.BoxApplication;
+import org.moonlightcontroller.mtd.ProactiveCasteling;
 import org.moonlightcontroller.events.EventManager;
 import org.moonlightcontroller.events.IEventManager;
 import org.moonlightcontroller.registry.IApplicationRegistry;
@@ -20,6 +21,7 @@ public class MoonlightController {
 
 	private IApplicationRegistry registry;
 	private ISouthboundServer sserver;
+	private ProactiveCasteling castler;
 	
 	/**
 	 * Initializes a new controller with the given parameters
@@ -33,6 +35,7 @@ public class MoonlightController {
 			int port) {
 		this.registry = registry;
 		this.sserver = new SouthboundServer(port);
+		this.castler = new ProactiveCasteling();;
 	}
 	
 	/**
@@ -53,6 +56,8 @@ public class MoonlightController {
 		for (BoxApplication app : apps){
 			eManager.HandleAppStart(app.getName());
 		}
+
+		this.castler.start();
 		
 		try {
 			this.sserver.start();

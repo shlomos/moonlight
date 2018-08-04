@@ -11,23 +11,23 @@ import org.moonlightcontroller.exceptions.MergeException;
 import org.moonlightcontroller.processing.BlockClass;
 import org.moonlightcontroller.processing.IProcessingGraph;
 
-public class StringClassifier extends ProcessingBlock implements IClassifierProcessingBlock{
+public class StringMatcher extends ProcessingBlock implements IClassifierProcessingBlock {
 	private List<String> pattern;
-	private boolean payload_only;
-	private String matcher_type;
+    private boolean payload_only;
+    private String matcher_type;
+	private boolean match_all;
 	private Priority priority;
 
-	public StringClassifier(String id, List<String> pattern, String matcher_type, Priority priority) {
-		super(id);
+	public StringMatcher(String id, List<String> pattern, String matcher_type) {
+        super(id);
+        this.matcher_type = matcher_type;
 		this.pattern = pattern;
-		this.priority = priority;
 	}
 	
-	public StringClassifier(String id, List<String> pattern, String matcher_type, boolean payload_only, Priority priority) {
+	public StringMatcher(String id, List<String> pattern, String matcher_type, boolean payload_only, boolean match_all, Priority priority) {
 		super(id);
-		this.pattern = pattern;
-		this.matcher_type = matcher_type;
-		this.payload_only = payload_only;
+        this.pattern = pattern;
+        this.matcher_type = matcher_type;
 	}
 
 	public List<String> getPattern() {
@@ -36,6 +36,14 @@ public class StringClassifier extends ProcessingBlock implements IClassifierProc
 
 	public boolean getPayload_only() {
 		return payload_only;
+	}
+
+	public boolean getMatch_all() {
+		return match_all;
+    }
+    
+    public String getMatcherType() {
+		return matcher_type;
 	}
 
 	@Override
@@ -47,12 +55,11 @@ public class StringClassifier extends ProcessingBlock implements IClassifierProc
 	protected void putConfiguration(Map<String, Object> config) {
 		config.put("matcher", this.matcher_type);
 		config.put("pattern", this.pattern.toArray(new String[0]));
-		//config.put("payload_only", this.payload_only);
 	}
-	
+
 	@Override
 	protected ProcessingBlock spawn(String id) {
-		return new StringClassifier(id, pattern, matcher_type, payload_only, priority);
+		return new StringMatcher(id, pattern, matcher_type, payload_only, match_all, priority);
 	}
 
 	@Override

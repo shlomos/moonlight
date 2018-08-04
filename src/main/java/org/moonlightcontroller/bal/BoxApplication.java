@@ -54,6 +54,10 @@ public abstract class BoxApplication {
 	public IApplicationType getType() {
 		return this.type;
 	}
+
+	public void setType(IApplicationType type) {
+		this.type = type;
+	}
 	
 	/**
 	 * @return the priority of the application

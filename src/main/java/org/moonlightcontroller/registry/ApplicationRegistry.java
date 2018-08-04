@@ -68,7 +68,7 @@ public class ApplicationRegistry implements IApplicationRegistry {
 		Iterator<BoxApplication> apit = sl.iterator();
 		while (apit.hasNext()){
 			BoxApplication app = apit.next();
-			System.out.printf("Registry: Found application: %s of type %d %n", app.getName(), app.getType());
+			System.out.printf("Registry: Found application: %s of type %s %n", app.getName(), app.getType().toString());
 			this.addApplication(app);
 		}
 		return true;
