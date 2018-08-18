@@ -1,7 +1,7 @@
 package org.moonlightcontroller.blocks;
 
-import org.moonlightcontroller.processing.ProcessingBlock;
 import org.moonlightcontroller.processing.IProcessingBlock;
+import org.moonlightcontroller.processing.ProcessingBlock;
 import org.moonlightcontroller.exceptions.MergeException;
 import org.moonlightcontroller.processing.BlockClass;
 import java.util.Map;
@@ -9,15 +9,17 @@ import java.util.Map;
 public class UtilizationMonitor extends ProcessingBlock implements IStaticProcessingBlock {
 	private int window;
 	private double proc_threshold;
+	IProcessingBlock protected_block;
 
 	public UtilizationMonitor(String id) {
 		super(id);
 	}
 	
-	public UtilizationMonitor(String id, int window, double thresh) {
+	public UtilizationMonitor(String id, IProcessingBlock protected_block, int window, double thresh) {
 		super(id);
 		this.window = window;
 		this.proc_threshold = thresh;
+		this.protected_block = protected_block;
 	}
 
 	public int getWindow() {
@@ -47,10 +49,12 @@ public class UtilizationMonitor extends ProcessingBlock implements IStaticProces
 	protected void putConfiguration(Map<String, Object> config) {
 		config.put("window", this.window);
 		config.put("proc_threshold", this.proc_threshold);
+		config.put("block", this.protected_block.getId());
 	}
 
 	@Override
 	protected ProcessingBlock spawn(String id) {
-		return new UtilizationMonitor(id, this.window, this.proc_threshold);
+		return new UtilizationMonitor(id, this.protected_block, this.window, this.proc_threshold);
 	}
+
 }

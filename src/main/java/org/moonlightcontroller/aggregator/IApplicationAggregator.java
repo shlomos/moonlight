@@ -1,6 +1,5 @@
 package org.moonlightcontroller.aggregator;
 
-import java.util.List;
 
 import org.moonlightcontroller.registry.IApplicationRegistry;
 import org.moonlightcontroller.managers.models.messages.Alert;
@@ -28,6 +27,11 @@ public interface IApplicationAggregator {
 	 */
 	public void invalidateProcessingGraph(ILocationSpecifier loc);
 	
+	/**
+	 * Get an Origin of a specified block in a specified location
+	 */
+	public Origin getOrigin(ILocationSpecifier loc, String block);
+
 	/**
 	 * Set a registery object for apps
 	 */

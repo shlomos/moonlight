@@ -104,6 +104,13 @@ public class SouthboundApi {
 	public Response Alert(Alert message) {
 		return ConnectionManager.getInstance().handleAlert(message);
 	}
+
+	@POST
+	@Path("Castle")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response Castle(Castle message) {
+		return ConnectionManager.getInstance().handleCastleRequest(message);
+	}
 	
 	@POST
 	@Path("AddCustomModuleResponse")

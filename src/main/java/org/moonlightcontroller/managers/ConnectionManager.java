@@ -13,6 +13,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.moonlightcontroller.aggregator.ApplicationAggregator;
+import org.moonlightcontroller.aggregator.IApplicationAggregator;
+import org.moonlightcontroller.bal.BoxApplication;
 import org.moonlightcontroller.blocks.CustomBlock;
 import org.moonlightcontroller.blocks.ObiType;
 import org.moonlightcontroller.managers.models.ConnectionInstance;
@@ -21,6 +23,7 @@ import org.moonlightcontroller.managers.models.NullRequestSender;
 import org.moonlightcontroller.managers.models.messages.AddCustomModuleRequest;
 import org.moonlightcontroller.managers.models.messages.AddCustomModuleResponse;
 import org.moonlightcontroller.managers.models.messages.Alert;
+import org.moonlightcontroller.managers.models.messages.Castle;
 import org.moonlightcontroller.managers.models.messages.Error;
 import org.moonlightcontroller.managers.models.messages.Hello;
 import org.moonlightcontroller.managers.models.messages.IMessage;
@@ -33,6 +36,7 @@ import org.moonlightcontroller.processing.IProcessingBlock;
 import org.moonlightcontroller.processing.IProcessingGraph;
 import org.moonlightcontroller.processing.JsonBlock;
 import org.moonlightcontroller.processing.JsonConnector;
+import org.moonlightcontroller.southbound.server.SouthboundApi;
 import org.moonlightcontroller.topology.ILocationSpecifier;
 import org.moonlightcontroller.topology.InstanceLocationSpecifier;
 import org.moonlightcontroller.topology.TopologyManager;
@@ -70,6 +74,20 @@ public class ConnectionManager implements ISouthboundClient {
 	public Response handleKeepaliveRequest(KeepAlive message) {
 		messagesMapping.put(message.getXid(), message);
 		return handleKeepaliveRequest(getInstanceLocationSpecifier(message.getDpid()), message.getXid());
+	}
+
+	public Response handleCastleRequest(Castle message) {
+		messagesMapping.put(message.getXid(), message);
+		long dpid = message.getOrigin_dpid();
+		IApplicationAggregator aggr = ApplicationAggregator.getInstance();
+		String block = message.getBlock();
+		InstanceLocationSpecifier loc = getInstanceLocationSpecifier(dpid);
+		/*
+		 * TODO: Now we can be specific to this app, and the block. We might only randomize IT.
+		 * BoxApplication app = aggr.getOrigin(loc, block).getApp();
+		 */
+		aggr.invalidateProcessingGraph(loc);
+		return sendSetProcessingGraphRequest(loc);
 	}
 
 	private InstanceLocationSpecifier getInstanceLocationSpecifier(long dpid) {
@@ -122,7 +140,7 @@ public class ConnectionManager implements ISouthboundClient {
 			return okResponse();
 
 		} catch (Exception e) {
-			LOG.warning("Error occured while handling Hello message" + e.toString());
+			LOG.warning("Error occured while sending SetProcessingGraph request" + e.toString());
 			e.printStackTrace();
 			return internalErrorResponse();
 		}

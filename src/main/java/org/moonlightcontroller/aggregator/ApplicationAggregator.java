@@ -754,7 +754,6 @@ public class ApplicationAggregator implements IApplicationAggregator {
 				}
 				graph.getBlocks()
 						.stream()
-						.filter(b -> b.getBlockType().equals("Alert"))
 						.forEach(b -> origins.put(b.getId(), new Origin(variant, b, b.getId())));
 				this.origins.put(loc, origins);
 
@@ -784,7 +783,11 @@ public class ApplicationAggregator implements IApplicationAggregator {
 	public void invalidateProcessingGraph(ILocationSpecifier loc) {
 		this.aggregated.remove(loc);
 	}
-	
+
+	public Origin getOrigin(ILocationSpecifier loc, String block) {
+		return this.origins.get(loc).get(block);
+	}
+
 	@Override
 	public void handleAlert(org.moonlightcontroller.managers.models.messages.Alert message) {
 		ILocationSpecifier loc = TopologyManager.getInstance().resolve(message.getOrigin_dpid());
@@ -794,22 +797,10 @@ public class ApplicationAggregator implements IApplicationAggregator {
 				Origin origin = origins.get(alert.getOrigin_block());
 				if (origin != null){
 					EventManager.getInstance().HandleAlert(
-							origin.app.getName(), 
-							new InstanceAlertArgs((InstanceLocationSpecifier)loc, message, origin.block));					
+							origin.getApp().getName(),
+							new InstanceAlertArgs((InstanceLocationSpecifier)loc, message, origin.getBlock()));
 				}
 			}
-		}
-	}
-	
-	private static class Origin {
-		private BoxApplication app;
-		private IProcessingBlock block;
-		private String id;
-		
-		public Origin(BoxApplication app, IProcessingBlock block, String id) {
-			this.app = app;
-			this.block = block;
-			this.id = id;
 		}
 	}
 }

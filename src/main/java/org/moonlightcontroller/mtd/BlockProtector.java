@@ -35,9 +35,7 @@ public class BlockProtector {
 		List<IConnector> connectors = new ArrayList<>();
 		List<IProcessingBlock> blocks = new ArrayList<>();
 		SetTimestamp entry_stamp = new SetTimestamp("SetTimestamp_" + block.getId());
-		UtilizationMonitor guard = new UtilizationMonitor("Guard_" + block.getId(), window, proc_threshold);
-		// TODO: a discard block can be wired to the guard if heavy packets should be dropped 
-		// instead of alerting the OBC formtd casteling.
+		UtilizationMonitor guard = new UtilizationMonitor("Guard_" + block.getId(), block, window, proc_threshold);
 		blocks.addAll(ImmutableList.of(entry_stamp, block, guard));
 		connectors.addAll(ImmutableList.of(
 			new Connector.Builder().setSourceBlock(entry_stamp).setSourceOutputPort(0).setDestBlock(block).build()
