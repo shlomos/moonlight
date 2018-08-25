@@ -1,11 +1,14 @@
 package org.openboxprotocol.protocol;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import org.moonlightcontroller.processing.IProcessingGraph;
 import org.moonlightcontroller.topology.ILocationSpecifier;
 
 public class Statement implements IStatement{
 
-	private IProcessingGraph graph;
+	private List<IProcessingGraph> graphs;
 	private ILocationSpecifier location;
 	
 	@Override
@@ -14,30 +17,37 @@ public class Statement implements IStatement{
 	}
 
 	@Override
-	public IProcessingGraph getProcessingGraph() {
-		return graph;
+	public List<IProcessingGraph> getProcessingGraphs() {
+		return graphs;
 	}
 
 	private Statement(Builder builder) {
-		this.graph = builder.graph;
+		this.graphs = builder.graphs;
 		this.location = builder.location;
 	}
 	
 	public static class Builder implements IStatement.Builder {
 
-		private IProcessingGraph graph;
+		private List<IProcessingGraph> graphs;
 		private ILocationSpecifier location;
 		
 		@Override
 		public Builder setLocation(
 				ILocationSpecifier locspec) {
 			this.location = locspec;
+			this.graphs = new LinkedList<>();
 			return this;
 		}
 
 		@Override
 		public Builder setProcessingGraph(IProcessingGraph graph) {
-			this.graph = graph;
+			this.graphs.add(graph);
+			return this;
+		}
+
+		@Override
+		public Builder removeProcessingGraph(IProcessingGraph graph) {
+			this.graphs.remove(graph);
 			return this;
 		}
 

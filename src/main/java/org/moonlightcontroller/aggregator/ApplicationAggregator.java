@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import java.util.Random;
 import org.moonlightcontroller.aggregator.Tupple.Pair;
 import org.moonlightcontroller.bal.BoxApplication;
 import org.moonlightcontroller.mtd.IApplicationType;
+import org.moonlightcontroller.mtd.Isotop;
 import org.moonlightcontroller.registry.IApplicationRegistry;
 import org.moonlightcontroller.blocks.Alert;
 import org.moonlightcontroller.blocks.Discard;
@@ -673,11 +675,13 @@ public class ApplicationAggregator implements IApplicationAggregator {
 	
 	private IApplicationRegistry registry;
 	private Map<ILocationSpecifier, IProcessingGraph> aggregated;
+	private Map<ILocationSpecifier, Isotop> previous_graphs;
 	private Map<ILocationSpecifier, Map<String, Origin>> origins;
 	
 	private ApplicationAggregator() {
 		this.registry = null;
 		this.aggregated = new HashMap<>();
+		this.previous_graphs = new HashMap<>();
 		this.origins = new HashMap<>();
 	}
 	
@@ -708,11 +712,20 @@ public class ApplicationAggregator implements IApplicationAggregator {
 	private IProcessingGraph findGraphForLocation(BoxApplication app, ILocationSpecifier loc) {
 		ITopologyManager topology = TopologyManager.getInstance();
 		Collection<IStatement> statements = app.getStatements();
+		Random rand = new Random();
 		for(IStatement stmt: statements) {
 			ILocationSpecifier stmtLoc = stmt.getLocation();
 			for (InstanceLocationSpecifier i: topology.getSubInstances(stmtLoc)) {
 				if (i.equals(loc)) {
-					return stmt.getProcessingGraph();
+					List<IProcessingGraph> subVariants = stmt.getProcessingGraphs();
+					int rnd = rand.nextInt(subVariants.size());
+					IProcessingGraph pick = subVariants.get(rnd);
+					if (this.previous_graphs.get(loc) != null) {
+						if (pick == this.previous_graphs.get(loc).subVariant) {
+							return subVariants.get((rnd + 1) % subVariants.size());
+						}
+					}
+					return pick;
 				}
 			}
 		}
@@ -723,11 +736,11 @@ public class ApplicationAggregator implements IApplicationAggregator {
 	public void aggregateLocation(ILocationSpecifier loc) {
 		synchronized (this) {
 			// Make sure we removed previous aggregated graph. 
-			this.aggregated.remove(loc);
-			// TODO: The following should be done for each OBI location specifier
+			invalidateProcessingGraph(loc);
+			// Aggregate all needed application types
 			for (IApplicationType app_type : registry.getApplicationTypes()) {
 				List<BoxApplication> variants = registry.getApplicationVariants(app_type);
-				HashMap<BoxApplication, IProcessingGraph> plausibleVariants = new HashMap<>();
+				LinkedHashMap<BoxApplication, IProcessingGraph> plausibleVariants = new LinkedHashMap<>();
 				Map<String, Origin> origins = new HashMap<>();
 				Random rand = new Random();
 				BoxApplication variant;
@@ -747,20 +760,22 @@ public class ApplicationAggregator implements IApplicationAggregator {
 					variant = (BoxApplication)keys[0];
 					graph = plausibleVariants.get(variant);
 				} else {
-					// TODO: get next pick if the same variant is chosen as the current.
 					int pick = rand.nextInt(keys.length);
-					variant = (BoxApplication)keys[pick];
+					if (this.previous_graphs.get(loc) != null &&
+							this.previous_graphs.get(loc).variant != (BoxApplication)keys[pick]) {
+						variant = (BoxApplication)keys[pick];
+					} else {
+						variant = (BoxApplication)keys[(pick + 1) % keys.length];
+					}
 					graph = plausibleVariants.get(variant);
 				}
+				this.previous_graphs.put(loc, new Isotop(variant, graph));
 				graph.getBlocks()
 						.stream()
 						.forEach(b -> origins.put(b.getId(), new Origin(variant, b, b.getId())));
 				this.origins.put(loc, origins);
 
 				IProcessingGraph prev = this.aggregated.get(loc);
-				if (graph == null){
-					continue;
-				}
 				if (prev != null){
 					graph = merge(prev, graph);
 				}

@@ -2,7 +2,10 @@ package org.moonlightcontroller.bal;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import javax.swing.text.Segment;
 
 import org.moonlightcontroller.events.IAlertListener;
 import org.moonlightcontroller.events.IHandleClient;
@@ -11,6 +14,8 @@ import org.moonlightcontroller.events.IInstanceUpListener;
 import org.moonlightcontroller.processing.IProcessingGraph;
 import org.moonlightcontroller.topology.IApplicationTopology;
 import org.moonlightcontroller.topology.ILocationSpecifier;
+import org.moonlightcontroller.topology.InstanceLocationSpecifier;
+import org.moonlightcontroller.topology.TopologyManager;
 import org.moonlightcontroller.mtd.IApplicationType;
 import org.openboxprotocol.protocol.IStatement;
 import org.openboxprotocol.protocol.Priority;
@@ -73,14 +78,30 @@ public abstract class BoxApplication {
 		return this.statements.values();
 	}
 	
-	public IProcessingGraph getProcessingGraph(ILocationSpecifier loc) {
-		// TODO: This should fetch the 'lowest' processing graph that exists for the given location
-		// E.g., if 'loc' is an OBI under segment s1.1 which is in segment s1, and there is no graph
-		// for the OBI location specifier, but there are graphs for s1.1 and for s1, then this method
-		// should return the graph for s1.1
-		if (!this.statements.containsKey(loc))
+	/**
+	 * Fetches the 'lowest' processing graph that exists for the given location
+	 * E.g., if 'loc' is an OBI under segment s1.1 which is in segment s1, and there is no graph
+	 * for the OBI location specifier, but there are graphs for s1.1 and for s1, then this method
+	 * should return the graph for s1.1
+	 */
+	public List<IProcessingGraph> getProcessingGraphs(ILocationSpecifier loc) {
+		ILocationSpecifier lowest = null;
+		for (ILocationSpecifier si: statements.keySet()) {
+			if (si instanceof InstanceLocationSpecifier && si.equals(loc)) {
+				lowest = si;
+				break;
+			}
+			if (si.findChild(loc.getId()) != null) {
+				if (lowest.findChild(si.getId()) != null) {
+					lowest = si;
+				}
+			}
+		}
+		if (lowest != null) {
+			return statements.get(lowest).getProcessingGraphs();
+		} else {
 			return null;
-		return this.statements.get(loc).getProcessingGraph();
+		}
 	}
 	
 	/**
