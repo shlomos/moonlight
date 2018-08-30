@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.swing.text.Segment;
 
 import org.moonlightcontroller.events.IAlertListener;
+import org.moonlightcontroller.events.ICastleListener;
 import org.moonlightcontroller.events.IHandleClient;
 import org.moonlightcontroller.events.IInstanceDownListener;
 import org.moonlightcontroller.events.IInstanceUpListener;
@@ -33,6 +34,7 @@ public abstract class BoxApplication {
 	private Priority priority;
 	private Map<ILocationSpecifier, IStatement> statements;
 	private IAlertListener alertListener;
+	private ICastleListener castleListener;
 	private IInstanceDownListener instanceDownListener;
 	private IInstanceUpListener instanceUpListener;
 	
@@ -134,6 +136,10 @@ public abstract class BoxApplication {
 	public IAlertListener getAlertListener(){
 		return this.alertListener;
 	}
+
+	public ICastleListener getCastleListener(){
+		return this.castleListener;
+	}
 	
 	public IInstanceDownListener getInstanceDownListener(){
 		return this.instanceDownListener;
@@ -151,6 +157,10 @@ public abstract class BoxApplication {
 
 	protected void setAlertListener(IAlertListener al){
 		this.alertListener = al;
+	}
+
+	protected void setCastleListener(ICastleListener cl){
+		this.castleListener = cl;
 	}
 	
 	protected void setInstanceDowntListener(IInstanceDownListener dl){

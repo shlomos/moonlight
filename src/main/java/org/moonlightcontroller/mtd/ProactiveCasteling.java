@@ -6,6 +6,8 @@ import org.moonlightcontroller.managers.ConnectionManager;
 import org.moonlightcontroller.topology.ITopologyManager;
 import org.moonlightcontroller.topology.InstanceLocationSpecifier;
 import org.moonlightcontroller.topology.TopologyManager;
+import java.util.Random;
+import java.util.logging.Logger;
 
 import java.util.TimerTask;
 import java.util.Timer;
@@ -15,16 +17,20 @@ public class ProactiveCasteling extends TimerTask {
 
     public static final int DELTA = 30000;
 
-    Date now;
-    IApplicationAggregator aggregator;
-    ConnectionManager connMgr;
-    Timer time;
+    protected Date now;
+    protected Random random;
+    protected IApplicationAggregator aggregator;
+    protected ConnectionManager connMgr;
+    protected Timer time;
+
+    private final static Logger LOG = Logger.getLogger(ProactiveCasteling.class.getName());
     
     public ProactiveCasteling() {
         super();
         this.aggregator = ApplicationAggregator.getInstance();
         this.connMgr = ConnectionManager.getInstance();
         this.time = new Timer();
+        this.random = new Random();
     }
 
     public void start() {
@@ -35,11 +41,14 @@ public class ProactiveCasteling extends TimerTask {
         ITopologyManager topology = TopologyManager.getInstance();
         now = new Date();
 
-        System.out.println("[" + now + "] " + "Proactively casteling applications...");
+        LOG.info("Proactively casteling applications...");
         for (InstanceLocationSpecifier loc : topology.getAllEndpoints()) {
-            this.aggregator.invalidateProcessingGraph(loc);
-            connMgr.sendSetProcessingGraphRequest(loc);
+            if (this.random.nextInt(2) == 1) {
+                this.aggregator.invalidateProcessingGraph(loc);
+                if (connMgr.sendSetProcessingGraphRequest(loc) != null) {
+                    LOG.info("Sending re-aggregated graph");
+                }
+            }
         }
-        System.out.println("sending re-aggregated graph");
 	}
 }

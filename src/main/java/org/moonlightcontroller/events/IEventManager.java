@@ -20,6 +20,13 @@ public interface IEventManager {
 	void HandleAlert(String app, InstanceAlertArgs args);
 	
 	/**
+	 * Sends Catle Request to the given application with the given parameters
+	 * @param app application identifier
+	 * @param args the castle arguments
+	 */
+	void HandleCastle(String app, InstanceCastleArgs args);
+
+	/**
 	 * Sends instance down event to all applications
 	 * @param args the event arguments
 	 */	

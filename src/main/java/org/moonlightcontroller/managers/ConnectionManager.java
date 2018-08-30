@@ -14,9 +14,12 @@ import javax.ws.rs.core.Response.Status;
 
 import org.moonlightcontroller.aggregator.ApplicationAggregator;
 import org.moonlightcontroller.aggregator.IApplicationAggregator;
+import org.moonlightcontroller.aggregator.Origin;
 import org.moonlightcontroller.bal.BoxApplication;
 import org.moonlightcontroller.blocks.CustomBlock;
 import org.moonlightcontroller.blocks.ObiType;
+import org.moonlightcontroller.events.EventManager;
+import org.moonlightcontroller.events.InstanceCastleArgs;
 import org.moonlightcontroller.managers.models.ConnectionInstance;
 import org.moonlightcontroller.managers.models.IRequestSender;
 import org.moonlightcontroller.managers.models.NullRequestSender;
@@ -86,6 +89,10 @@ public class ConnectionManager implements ISouthboundClient {
 		 * TODO: Now we can be specific to this app, and the block. We might only randomize IT.
 		 * BoxApplication app = aggr.getOrigin(loc, block).getApp();
 		 */
+		Origin origin = aggr.getOrigin(loc, block);
+		EventManager.getInstance().HandleCastle(
+				origin.getApp().getName(),
+				new InstanceCastleArgs((InstanceLocationSpecifier)loc, message, origin.getBlock()));
 		aggr.invalidateProcessingGraph(loc);
 		return sendSetProcessingGraphRequest(loc);
 	}
@@ -134,10 +141,16 @@ public class ConnectionManager implements ISouthboundClient {
 				blocks = translateBlocks(processingGraph.getBlocks());
 				connectors = translateConnectors(processingGraph.getConnectors());
 			}
-			SetProcessingGraphRequest processMessage = new SetProcessingGraphRequest(0, instancesMapping.get(loc).getDpid(), null, blocks, connectors);
-			sendMessage(loc, processMessage, new NullRequestSender());
-			
-			return okResponse();
+
+			ConnectionInstance inst = instancesMapping.get(loc);
+			if (inst != null) {
+				SetProcessingGraphRequest processMessage = new SetProcessingGraphRequest(0, instancesMapping.get(loc).getDpid(), null, blocks, connectors);
+				sendMessage(loc, processMessage, new NullRequestSender());
+				return okResponse();
+			} else {
+				LOG.warning("No OBI at location: " + loc);
+			}
+			return null;
 
 		} catch (Exception e) {
 			LOG.warning("Error occured while sending SetProcessingGraph request" + e.toString());

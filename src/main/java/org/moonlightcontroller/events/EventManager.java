@@ -62,7 +62,21 @@ public class EventManager implements IEventManager {
 					}
 			}
 		}
-		
+	}
+
+	@Override
+	public void HandleCastle(String app, InstanceCastleArgs args) {
+		BoxApplication bapp = this.apps.get(app);
+		if (bapp != null) {
+			ICastleListener cl = bapp.getCastleListener();
+			if (cl != null) {
+				try {
+					cl.Handle(args);
+					} catch (Exception e) {
+						LOG.warning("Caught exception while handling app specific catle for app " + app + ":" + e.toString());
+					}
+			}
+		}
 	}
 	
 	@Override
