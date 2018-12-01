@@ -669,6 +669,42 @@
       ]
     },
     {
+      "type": "ToHost",
+      "blockClass": "T",
+      "configuration": [
+        {
+          "name": "devname",
+          "required": true,
+          "type": "String",
+          "description": ""
+        }
+      ],
+      "read_handlers": [
+        
+      ],
+      "write_handlers": [
+        
+      ]
+    },
+    {
+      "type": "FromHost",
+      "blockClass": "T",
+      "configuration": [
+        {
+          "name": "devname",
+          "required": true,
+          "type": "String",
+          "description": ""
+        }
+      ],
+      "read_handlers": [
+        
+      ],
+      "write_handlers": [
+        
+      ]
+    },
+    {
       "type": "Discard",
       "blockClass": "T",
       "configuration": [

@@ -53,7 +53,9 @@ import org.openboxprotocol.exceptions.InstanceNotAvailableException;
 public class ConnectionManager implements ISouthboundClient {
 
 	private final static Logger LOG = Logger.getLogger(ConnectionManager.class.getName());
+	private final static long CASTLE_GRACE_TIME = 5000;
 
+	Map<InstanceLocationSpecifier, Map<String, Long>> castle_timers;
 	Map<InstanceLocationSpecifier, ConnectionInstance> instancesMapping;
 	Map<Integer, IMessage> messagesMapping;
 	Map<Integer, IRequestSender> requestSendersMapping;
@@ -61,6 +63,7 @@ public class ConnectionManager implements ISouthboundClient {
 	private static ConnectionManager instance;
 
 	private ConnectionManager () {
+		castle_timers = new ConcurrentHashMap<>();
 		instancesMapping = new ConcurrentHashMap<>();
 		messagesMapping = new ConcurrentHashMap<>();
 		requestSendersMapping = new ConcurrentHashMap<>();
@@ -85,6 +88,19 @@ public class ConnectionManager implements ISouthboundClient {
 		IApplicationAggregator aggr = ApplicationAggregator.getInstance();
 		String block = message.getBlock();
 		InstanceLocationSpecifier loc = getInstanceLocationSpecifier(dpid);
+		/* Handle multiple castles hack */
+		boolean ignore = false;
+		if (!castle_timers.containsKey(loc)) {
+			castle_timers.put(loc, new ConcurrentHashMap<>());
+		} else {
+			if (castle_timers.get(loc).containsKey(block)) {
+				ignore = castle_timers.get(loc).get(block) < System.currentTimeMillis() - CASTLE_GRACE_TIME;
+			}
+		}
+		if (ignore) {
+			return okResponse();
+		}
+		castle_timers.get(loc).put(block, System.currentTimeMillis());
 		/*
 		 * TODO: Now we can be specific to this app, and the block. We might only randomize IT.
 		 * BoxApplication app = aggr.getOrigin(loc, block).getApp();
