@@ -106,11 +106,17 @@ public class ConnectionManager implements ISouthboundClient {
 		 * BoxApplication app = aggr.getOrigin(loc, block).getApp();
 		 */
 		Origin origin = aggr.getOrigin(loc, block);
-		EventManager.getInstance().HandleCastle(
-				origin.getApp().getName(),
-				new InstanceCastleArgs((InstanceLocationSpecifier)loc, message, origin.getBlock()));
-		aggr.invalidateProcessingGraph(loc);
-		return sendSetProcessingGraphRequest(loc);
+		if (origin!=null) {
+			System.out.println("casteling message with good origin!");
+			//aggr.printOrigins();
+			EventManager.getInstance().HandleCastle(
+					origin.getApp().getName(),
+					new InstanceCastleArgs((InstanceLocationSpecifier)loc, message, origin.getBlock()));
+			aggr.invalidateProcessingGraph(loc);
+			return sendSetProcessingGraphRequest(loc);
+		}
+		System.out.println("casteling message with bad origin!");
+		return okResponse();
 	}
 
 	private InstanceLocationSpecifier getInstanceLocationSpecifier(long dpid) {

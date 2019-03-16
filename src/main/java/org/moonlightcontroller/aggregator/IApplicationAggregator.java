@@ -31,6 +31,7 @@ public interface IApplicationAggregator {
 	 * Get an Origin of a specified block in a specified location
 	 */
 	public Origin getOrigin(ILocationSpecifier loc, String block);
+	public void printOrigins();
 
 	/**
 	 * Set a registery object for apps

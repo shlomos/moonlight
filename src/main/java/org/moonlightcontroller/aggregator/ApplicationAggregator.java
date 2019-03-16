@@ -803,6 +803,12 @@ public class ApplicationAggregator implements IApplicationAggregator {
 		return this.origins.get(loc).get(block);
 	}
 
+	public void printOrigins() {
+		for (ILocationSpecifier ls: this.origins.keySet()) {
+			System.out.print("ls= "+ls+", val= "+this.origins.get(ls));
+		}
+	}
+
 	@Override
 	public void handleAlert(org.moonlightcontroller.managers.models.messages.Alert message) {
 		ILocationSpecifier loc = TopologyManager.getInstance().resolve(message.getOrigin_dpid());

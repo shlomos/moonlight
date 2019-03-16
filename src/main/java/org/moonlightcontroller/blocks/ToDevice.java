@@ -20,6 +20,7 @@ public class ToDevice extends ProcessingBlock {
 		super(id);
 		this.devname = devname;
 		this.netmap = netmap;
+		fix_devname();
 	}
 
 	public String getDevice() {
@@ -28,7 +29,13 @@ public class ToDevice extends ProcessingBlock {
 
 	@Override
 	public String getBlockType() {
-		return this.netmap ? "ToDevice" : "ToNetmapDevice"; 
+		return this.netmap ? "ToNetmapDevice" : "ToDevice"; 
+	}
+
+	public void fix_devname() {
+		if (this.netmap) {
+			this.devname = "netmap:" + this.devname;
+		}
 	}
 
 	@Override
