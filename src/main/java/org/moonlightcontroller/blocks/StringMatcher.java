@@ -12,71 +12,86 @@ import org.moonlightcontroller.processing.BlockClass;
 import org.moonlightcontroller.processing.IProcessingGraph;
 
 public class StringMatcher extends ProcessingBlock implements IClassifierProcessingBlock {
-	private List<String> pattern;
+    private List<String> pattern;
     private boolean payload_only;
     private String matcher_type;
-	private boolean match_all;
-	private Priority priority;
+    private boolean hex;
+    private boolean match_all;
+    private Priority priority;
 
-	public StringMatcher(String id, List<String> pattern, String matcher_type) {
+    public StringMatcher(String id, List<String> pattern, String matcher_type) {
         super(id);
         this.matcher_type = matcher_type;
-		this.pattern = pattern;
-	}
-	
-	public StringMatcher(String id, List<String> pattern, String matcher_type, boolean payload_only, boolean match_all, Priority priority) {
-		super(id);
+        this.hex = false;
         this.pattern = pattern;
+    }
+
+    public StringMatcher(String id, List<String> pattern, String matcher_type, boolean hex) {
+        super(id);
         this.matcher_type = matcher_type;
-	}
+        this.hex = hex;
+        this.pattern = pattern;
+    }
 
-	public List<String> getPattern() {
-		return pattern;
-	}
+    public StringMatcher(String id, List<String> pattern, String matcher_type, boolean hex, boolean payload_only, boolean match_all, Priority priority) {
+        super(id);
+        this.pattern = pattern;
+        this.hex = hex;
+        this.matcher_type = matcher_type;
+    }
 
-	public boolean getPayload_only() {
-		return payload_only;
-	}
+    public List<String> getPattern() {
+        return pattern;
+    }
 
-	public boolean getMatch_all() {
-		return match_all;
+    public boolean getPayload_only() {
+        return payload_only;
+    }
+
+    public boolean getMatch_all() {
+        return match_all;
     }
     
     public String getMatcherType() {
-		return matcher_type;
-	}
+        return matcher_type;
+    }
 
-	@Override
-	public BlockClass getBlockClass() {
-		return BlockClass.BLOCK_CLASS_CLASSIFIER;
-	}
+    public boolean isHex() {
+        return hex;
+    }
 
-	@Override
-	protected void putConfiguration(Map<String, Object> config) {
-		config.put("matcher", this.matcher_type);
-		config.put("pattern", this.pattern.toArray(new String[0]));
-	}
+    @Override
+    public BlockClass getBlockClass() {
+        return BlockClass.BLOCK_CLASS_CLASSIFIER;
+    }
 
-	@Override
-	protected ProcessingBlock spawn(String id) {
-		return new StringMatcher(id, pattern, matcher_type, payload_only, match_all, priority);
-	}
+    @Override
+    protected void putConfiguration(Map<String, Object> config) {
+        config.put("matcher", this.matcher_type);
+        config.put("hex", this.hex);
+        config.put("pattern", this.pattern.toArray(new String[0]));
+    }
 
-	@Override
-	public Priority getPriority() {
-		return priority;
-	}
+    @Override
+    protected ProcessingBlock spawn(String id) {
+        return new StringMatcher(id, pattern, matcher_type, hex, payload_only, match_all, priority);
+    }
 
-	@Override
-	public boolean canMergeWith(IClassifierProcessingBlock other) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    @Override
+    public Priority getPriority() {
+        return priority;
+    }
 
-	@Override
-	public IClassifierProcessingBlock mergeWith(IClassifierProcessingBlock other, IProcessingGraph containingGraph,
-			List<Pair<Integer>> outPortSources) throws MergeException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public boolean canMergeWith(IClassifierProcessingBlock other) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public IClassifierProcessingBlock mergeWith(IClassifierProcessingBlock other, IProcessingGraph containingGraph,
+            List<Pair<Integer>> outPortSources) throws MergeException {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }
