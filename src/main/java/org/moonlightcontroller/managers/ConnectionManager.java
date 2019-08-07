@@ -53,7 +53,7 @@ import org.openboxprotocol.exceptions.InstanceNotAvailableException;
 public class ConnectionManager implements ISouthboundClient {
 
 	private final static Logger LOG = Logger.getLogger(ConnectionManager.class.getName());
-	private final static long CASTLE_GRACE_TIME = 5000;
+	private final static long CASTLE_GRACE_TIME = 30000;
 
 	Map<InstanceLocationSpecifier, Map<String, Long>> castle_timers;
 	Map<InstanceLocationSpecifier, ConnectionInstance> instancesMapping;

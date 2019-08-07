@@ -15,7 +15,7 @@ import java.util.Date;
 
 public class ProactiveCasteling extends TimerTask {
 
-    public static final int DELTA = 30000;
+    public static final int DELTA = 60000;
 
     protected Date now;
     protected Random random;
@@ -24,7 +24,7 @@ public class ProactiveCasteling extends TimerTask {
     protected Timer time;
 
     private final static Logger LOG = Logger.getLogger(ProactiveCasteling.class.getName());
-    
+
     public ProactiveCasteling() {
         super();
         this.aggregator = ApplicationAggregator.getInstance();

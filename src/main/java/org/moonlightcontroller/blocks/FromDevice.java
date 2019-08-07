@@ -4,25 +4,26 @@ import java.util.Map;
 
 import org.moonlightcontroller.processing.BlockClass;
 import org.moonlightcontroller.processing.ProcessingBlock;
+import org.moonlightcontroller.processing.NetworkStack;
 
 public class FromDevice extends ProcessingBlock {
 
 	private String devname;
 	private boolean sniffer;
 	private boolean promisc;
-	private boolean netmap;
-	
+	private NetworkStack network_stack;
+
 	public FromDevice(String id, String devname) {
 		super(id);
 		this.devname = devname;
-		this.netmap = false;
+		this.network_stack = NetworkStack.KERNEL;
 		this.addPort();
 	}
 
-	public FromDevice(String id, String devname, Boolean netmap) {
+	public FromDevice(String id, String devname, NetworkStack net_stack) {
 		super(id);
 		this.devname = devname;
-		this.netmap = netmap;
+		this.network_stack = net_stack;
 		fix_devname();
 		this.addPort();
 	}
@@ -32,17 +33,17 @@ public class FromDevice extends ProcessingBlock {
 		this.devname = devname;
 		this.sniffer = sniffer;
 		this.promisc = promisc;
-		this.netmap = false;
+		this.network_stack = NetworkStack.KERNEL;
 		this.addPort();
 	}
 
-	public FromDevice(String id, String devname, boolean sniffer, boolean promisc, boolean netmap) throws IllegalArgumentException {
+	public FromDevice(String id, String devname, boolean sniffer, boolean promisc, NetworkStack net_stack) throws IllegalArgumentException {
 		super(id);
 		this.devname = devname;
-		this.netmap = netmap;
+		this.network_stack = net_stack;
 		this.sniffer = sniffer;
-		if (this.sniffer && this.netmap) {
-			throw new IllegalArgumentException("Cannot use sniffer with netmap device.");
+		if (this.sniffer && this.network_stack != NetworkStack.KERNEL) {
+			throw new IllegalArgumentException("Cannot use sniffer with non-kernel device.");
 		}
 		this.promisc = promisc;
 		fix_devname();
@@ -50,14 +51,24 @@ public class FromDevice extends ProcessingBlock {
 	}
 
 	public void fix_devname() {
-		if (this.netmap) {
+		if (this.network_stack == NetworkStack.NETMAP) {
 			this.devname = "netmap:" + this.devname;
 		}
 	}
-	
+
 	@Override
 	public String getBlockType() {
-		return this.netmap ? "FromNetmapDevice" : "FromDevice"; 
+		switch(this.network_stack) {
+			case KERNEL:
+				return "FromDevice";
+			case NETMAP:
+				return "FromNetmapDevice";
+			case DPDK:
+				return "FromDPDKDevice";
+			default:
+				System.out.println("Unknown network stack: " + this.network_stack);
+				return "FromDevice";
+		}
 	}
 
 	public String getDevname() {
@@ -70,7 +81,7 @@ public class FromDevice extends ProcessingBlock {
 
 	public boolean isPromisc() {
 		return promisc;
-	}	
+	}
 
 	@Override
 	public BlockClass getBlockClass() {
@@ -80,14 +91,14 @@ public class FromDevice extends ProcessingBlock {
 	@Override
 	protected void putConfiguration(Map<String, Object> config) {
 		config.put("devname", this.devname);
-		if (!this.netmap) {
+		if (this.network_stack == NetworkStack.KERNEL) {
 			config.put("sniffer", this.sniffer);
 		}
 		config.put("promisc", this.promisc);
 	}
-	
+
 	@Override
 	protected ProcessingBlock spawn(String id) {
-		return new FromDevice(id, this.devname, this.sniffer, this.promisc, this.netmap);
+		return new FromDevice(id, this.devname, this.sniffer, this.promisc, this.network_stack);
 	}
 }

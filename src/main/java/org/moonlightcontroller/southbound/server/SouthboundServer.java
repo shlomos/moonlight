@@ -36,15 +36,14 @@ public class SouthboundServer implements ISouthboundServer {
 	        this.jetty = jettyServer;
 	}
 
-	@Override
 	public void start() throws Exception {
-        try {
-            this.jetty.start();
-            this.jetty.join();
-        } catch(Exception e) {
-        	System.out.println(e.toString());
-        }finally {
-            this.jetty.destroy();
-        }
+        	try {
+            		this.jetty.start();
+            		this.jetty.join();
+        	} catch(Exception e) {
+        		System.out.println(e.toString());
+			this.jetty.stop();
+			this.jetty.destroy();
+		}
 	}
 }
